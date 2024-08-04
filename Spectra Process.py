@@ -1,6 +1,10 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 
+#This python file is for ploting the stick spectra calculated from the PyExoCross.
+#By giving the stick file, we could plot the intensity.
+#To map with the existing plots from other researches, we need to turn the PyExoCross generated wavenumber to wavelength.
+
 filename = "Al_Spectra_Emission.stick"
 column_names= ["Wavenumber","Intensity","1","2","3","4"]
 df = pd.read_csv(filename, delim_whitespace=True, names=column_names)
@@ -21,8 +25,9 @@ dfMg["Wavelength"] = 1e7 / dfMg["Wavenumber"]
 dfMg = dfMg[['Wavelength',"Intensity"]]
 
 
-df["Intensity"] = df["Intensity"] * 6
 
+#The following code is to limit the range of the plot so that it could match the existing one in the same scale.
+df["Intensity"] = df["Intensity"] * 6
 
 df_filtered = df[(df['Wavelength'] >= 278) & (df['Wavelength'] <= 330)]
 df_filtered_Mg = dfMg[(dfMg['Wavelength'] >= 278) & (dfMg['Wavelength'] <= 330)]

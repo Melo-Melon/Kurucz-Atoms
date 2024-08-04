@@ -1,6 +1,9 @@
 import pandas as pd
-#Remember change file name, deal with files, and change the mapping table each time.
 
+#This file is for merging the multiple files for trans. Similar to States merge.
+# In Merge python file, the way of dealing with trans will be slightly different. All the trans lines will come from agafgf file directly.
+
+#Due to the huge size of some agafgf files. Some headers cannot be removed. Therefore, atoms after Ti shall add skiprows = 1 when reading agafgf file.
 #Ti skip-row 1
 element = "K-I"
 AGA_file_w = "Kurucz-" + element + "/AGAFGFy.csv"
@@ -11,9 +14,13 @@ output_filename = "Kurucz/Kurucz" + element +".trans"
 column_name = ["wl","wn(cm-1)","log_gf","log_f","log_fe","log_A","log_gA","ele","E1","J1","label1","E2","J2","label2"]
 Trans_n_A_w = pd.read_csv(AGA_file_w,names=column_name,skiprows=1)
 
-#Solve J2 problem
+
+#Some of the trans files' J2 has problem of adding .1 automatically to the first J2. The commented line turn that to correct value.
 # Trans.loc[0,"J2"]= 2.5
 # Trans["J2"] = Trans["J2"].astype(float)
+
+
+#Deal with first trans file.
 
 States = pd.read_csv(States_to_trans)
 #print(States.head())
@@ -46,6 +53,7 @@ Trans_n_A_w = Trans_n_A_w.sort_values(by="wn(cm-1)",ascending=True)
 
 print(Trans_n_A_w)
 
+#Deal with Second trans file.
 
 column_name = ["wl","wn(cm-1)","log_gf","log_f","log_fe","log_A","log_gA","ele","E1","J1","label1","E2","J2","label2"]
 Trans_n_A_z = pd.read_csv(AGA_file_z,names=column_name,skiprows=1)
@@ -80,6 +88,8 @@ Trans_n_A_z = Trans_n_A_z[order]
 Trans_n_A_z = Trans_n_A_z.sort_values(by="wn(cm-1)",ascending=True)
 
 print(Trans_n_A_z)
+
+#Now we combine two separate trans files to one and reformat them into Exmol format
 
 combined_df = pd.concat([Trans_n_A_z,Trans_n_A_w])
 combined_df = combined_df.drop_duplicates()

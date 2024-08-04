@@ -2,6 +2,9 @@
 #Namely:  Y-II, Na-I, K-I, Ca-II, Zn-I
 
 
+#For states merge, it is quite simple.We just read in all the pre-processed .states files separately and then merge them with duplicates removed.
+#The index is then re-given after the merged file is sorted by energy level
+
 import pandas as pd
 column_names = ['Index', 'E', 'g_j', 'J', 'Uncertainty', 'Life(s)', 'g_lande', 'Configuration', 'Term', 'Abbr']
 element = "Zn-I"
@@ -33,7 +36,8 @@ if combined_df["J"].iloc[0].is_integer():
     format_str = ("{:>12d} {:>12} {:>6d} {:>7d} {:>12.6f} {:>12.4e} {:>10.6f} {:<12} {:<7} {:>2}\n")
 else:
     format_str = ("{:>12d} {:>12} {:>6d} {:>7.1f} {:>12.6f} {:>12.4e} {:>10.6f} {:<12} {:<7} {:>2}\n")
-# Write the DataFrame to a text file with the specified format
+
+
 output_file = output_filename
 #output_file = 'Kurucz/KuruczBaII.states'
 with open(output_file, 'w') as f:
@@ -47,7 +51,7 @@ with open(output_file, 'w') as f:
 print(f"Data has been written to {output_file}")
 
 
-
+# This part also merge the csv file since the csv file is an important data when mapping those states to the trans files.
 csv_df_z = pd.read_csv(States_to_transz)
 csv_df_w = pd.read_csv(States_to_transy)
 

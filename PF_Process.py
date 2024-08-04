@@ -6,14 +6,17 @@ from io import StringIO
 import pandas as pd
 
 
-ael1500_url = "http://kurucz.harvard.edu/atoms/5601/partfn5601.dat"
-res = urllib.request.urlopen(ael1500_url)
+#Since partition function is relatively small. This could be scraped here and then processed into Exomol Format.
+#Step 1: Scrape the partition function value here by changing the url
+url = "http://kurucz.harvard.edu/atoms/5601/partfn5601.dat"
+res = urllib.request.urlopen(url)
 
 data = res.read()
 data = data.decode("utf-8")
 soup = BeautifulSoup(data,features="html.parser")
 
 
+#Step 2: Choose one path to save the pf.csv
 path = "Kurucz-Ba-II/PF.csv"
 
 pf_column_specification = [(0, 5), (5, 12), (12, 22), (22, 32)]
@@ -27,6 +30,7 @@ PF = pd.read_csv(path,usecols= read_range,names=column_name,skiprows=2)
 print(PF)
 
 
+# Step 3: reformat the pf values into the Exomol format.
 format_str = "{:>8.1f}{:>1}{:>15.4f}\n"
 
 output_file = 'Kurucz/KuruczBaII.pf'

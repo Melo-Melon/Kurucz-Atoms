@@ -1,5 +1,7 @@
 import pandas as pd
-#Remember change file name, deal with files, and change the mapping table each time.
+
+#This file is to remove those rows with either nan in wavenumber/A coefficient or -1 in indexes.
+#This simply prevents the invalid data inside the .trans files
 
 #Ti skip-row 1
 element = "Zr"

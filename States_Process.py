@@ -1,10 +1,10 @@
-#Li_Kurucz.states
-#Li+_Kurucz.states
-#Li_Kurucz.trans
-#Li+_Kurucz.trans
+
 import pandas as pd
 import re
-#Remember change file name, deal with files, and change the mapping table each time.
+
+#This python file mainly serves for the .states processing based on the .gam and lifetime files.
+#Remember change atom names,(remove top part in gam and lifetime file) and change the mapping table each time.
+#For multiple .gam files, remember to add suffix.
 element = "Ne-II"
 states_file = "Kurucz-" + element + "/GAM.csv"
 Life_file = "Kurucz-" + element + "/LIFE.csv"
@@ -12,7 +12,7 @@ States_to_trans = "Kurucz-" + element + "/States_Final.csv"
 output_filename = "Kurucz/Kurucz" + element +".states"
 
 
-# Trial On Mapping
+# Here is the mapping table, this could be found on top of each .gam file in kurucz atomic database.
 mapping = """
 1 s2p5      2 s2p4 3p   3 s2p4 4p   4 s2p4 5p   5 s2p4 6p   6 s2p4 7p   
 7 s2p4 8p   8 s2p4 9p   9 s2p4 10p  A s2p4 11p  B s2p4 12p  C s2p4 4f   
@@ -43,6 +43,10 @@ t           u           v           w           x           y
 z           !           "           #           $           %              
 """
 
+# The mapping table has two version, one is for odd and one is for even.
+# If the .gam starts with an odd state, then the mapping table will also begin with odd. Vice versa.
+# Use the first mapping in the bottom's mapping time as a split word.
+
 ##start with odd
 eve_1 = "1 s2p4 3s"
 odd_part, eve_part = mapping.split(eve_1)
@@ -56,7 +60,7 @@ eve_part = eve_1 + eve_part
 
 
 
-
+# Here we read the .gam files and then remove duplicates.
 column_name = ["ELEM","Index","E","J","label","g_lande"]
 states = pd.read_csv(states_file,names= column_name)
 
@@ -67,10 +71,12 @@ index = range(1,len(states)+1)
 index = pd.DataFrame(index,columns=["Index"])
 states = pd.concat([index,states],axis = 1)
 
+# g_j is computed and uncertainty is assigned with 0.1 as default
 states["g_j"] = 2 * states["J"] + 1
 states["g_j"] = states["g_j"].astype(int)
 states["Uncertainty"] = 0.1
 
+# Here we read in the lifetime file and remove duplicates. Lifetime is turned from ns to s to fit exomol format.
 column_name = ["ELEM","Index","E","J","label","SUM_A","Life1","Life(ns)"]
 life = pd.read_csv(Life_file,names= column_name)
 
@@ -81,13 +87,13 @@ life.reset_index(drop=True, inplace=True)
 life["Life(s)"] = life["Life(ns)"] / 1e9
 life.drop(["Life(ns)"],axis=1,inplace=True)
 
-#life = life[["Life(s)","ref"]]
 
+#Lifetime is merged with the states based on E, J, label.
 combined_df = states.merge(life[['E', 'J', 'label', 'Life(s)']],
                            on=['E', 'J', 'label'],
                            how = 'left')
 
-#If no lifetime
+#For some atoms that do not have lifetime provided, use nan for lifetime column.
 # states["Life(s)"] = float("nan")
 # combined_df = states.copy()
 
@@ -95,7 +101,7 @@ order = ['Index','ELEM', 'E', 'g_j', 'J', 'Uncertainty', 'Life(s)', 'g_lande', '
 combined_df = combined_df[order]
 
 
-#Only used when negative value shown in E
+#Abbr is given to distinguish if the states is caculated or observed. If observed, use NI. Else, use CA.
 combined_df['Abbr'] = combined_df['E'].apply(lambda x: 'CA' if x < 0 else 'NI')
 combined_df["E"] = combined_df["E"].abs()
 
@@ -122,7 +128,8 @@ mapping_even = match_table(eve_part)
 mapping_odd = match_table(odd_part)
 
 
-# Apply the function to split the 'label' column
+# Here, we start to split the labels into Configuration and Terms.
+# The detail spliting cases are given in the report and github page.
 configuration_list = []
 term_list = []
 for index, row in combined_df.iterrows():
@@ -174,6 +181,7 @@ for index, row in combined_df.iterrows():
 combined_df['Configuration'] = configuration_list
 combined_df['Term'] = term_list
 
+#Here, we remove those rows with unknown labels. States are sorted based on Energy level. The first lifetime will be infinity always.
 combined_df = combined_df[(combined_df['Configuration']!='unknown') & (combined_df["Term"] != 'unknown')]
 combined_df = combined_df.sort_values(by = "E", ascending= True)
 combined_df.at[0, 'Life(s)'] = float('inf')
@@ -182,22 +190,20 @@ combined_df.drop(["Index"],axis=1,inplace=True)
 combined_df.insert(0, 'Index', range(1, len(combined_df) + 1))
 #combined_df = pd.concat([index,combined_df],axis = 1)
 
+# The reason I save .csv for states here is that the original label is much eaiser for mapping in trans files.
 combined_df_alter = combined_df.copy()
 combined_df_alter.drop(["ELEM","Configuration","Term"],axis=1,inplace=True)
 combined_df_alter.to_csv(States_to_trans,index=False)
 #combined_df_alter.to_csv("Kurucz-Si-I/States_Final.csv",index=False)
 print("Saved Done")
-# Drop the original 'label' column
+
 
 combined_df = combined_df.drop(columns=['label','ELEM'])
 
 order = ['Index', 'E', 'g_j', 'J', 'Uncertainty', 'Life(s)', 'g_lande', 'Configuration','Term','Abbr']
 combined_df = combined_df[order]
 
-
-# Define the Fortran format
-
-#If Abbr appeared:
+#The following code reformat the states data into the Exomol format.
 
 def format_energy(value):
     int_part = len(str(abs(int(value))))

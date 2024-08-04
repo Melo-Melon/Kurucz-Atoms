@@ -1,5 +1,7 @@
 import pandas as pd
-#Remember change file name, deal with files, and change the mapping table each time.
+
+#Remember change atoms names.
+#Due to the huge size of some agafgf files. Some headers cannot be removed. Therefore, atoms after Ti shall add skiprows = 1 when reading agafgf file
 
 #Ti skip-row 1
 element = "Ne-II"
@@ -13,11 +15,13 @@ output_filename = "Kurucz/Kurucz" + element +".trans"
 column_name = ["wl","log_gf","ele","E1","J1","label1","E2","J2","label2"]
 Trans = pd.read_csv(trans_file,names=column_name)
 
-#Solve J2 problem
+#Some of the trans files' J2 has problem of adding .1 automatically to the first J2. The commented line turn that to correct value.
 # Trans.loc[0,"J2"]= 2.5
 # Trans["J2"] = Trans["J2"].astype(float)
 
 print(Trans.head())
+
+#The following code starts to turn the E, j and lable into the corresponding states index.
 
 States = pd.read_csv(States_to_trans)
 #print(States.head())
@@ -38,6 +42,9 @@ cols.insert(cols.index('E1'), cols.pop(cols.index('Index1')))
 cols.insert(cols.index('E2'), cols.pop(cols.index('Index2')))
 Trans = Trans[cols]
 
+
+#Then we deal with the agafgf files to attain the A coefficient. We turn Log A to A with base 10. Wavenumber is also added to the trans.
+
 column_name = ["wl","wn(cm-1)","log_gf","log_f","log_fe","log_A"]
 #column_name = ["wl","wn(cm-1)","log_gf","log_f","log_fe","log_A","nouse","ele","E1","J1","label1","E2","J2","label2"]
 
@@ -57,6 +64,8 @@ combined_df= pd.concat([A_WN,Trans],axis=1)
 
 combined_df.drop(["wl","log_gf","ele","E1","J1","label1","E2","J2","label2"]
                  ,axis=1,inplace=True)
+
+#Trans files are all sorted based on the wavenumber. Then they will be saved in the Exomol Format.
 
 order = ["Index1","Index2","A(10base)","wn(cm-1)"]
 combined_df = combined_df[order]

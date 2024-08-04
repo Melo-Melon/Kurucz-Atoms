@@ -2,7 +2,11 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 
+#This python file is for ploting the partition function value
 
+
+#The following code plots both the scraped Kurucz atomic partition function values and the pyexocross calculated pf values.
+#This will give a direct match between the scraped one and calculated data, which proves the correctness of the data.
 
 scrape = "Kurucz/Al/Al/Kurucz/Al__Kurucz.pf"
 gen = "PyExoCross/TianyangXie/Al/27Al/Kurucz/27Al__Kurucz.pf"
@@ -51,6 +55,7 @@ axs[1, 0].set_xlabel('Temperature')
 axs[1, 0].set_ylabel('Partition Function')
 
 
+
 scrape = "Kurucz/Si/Si/Kurucz/Si__Kurucz.pf"
 gen = "PyExoCross/TianyangXie/Si/28Si/Kurucz/28Si__Kurucz.pf"
 column_names = ['T', 'Value']
@@ -76,7 +81,8 @@ plt.show()
 
 
 
-# # Plot the data
+#The following code plots some of the scraped pf values in one figure.
+
 # plt.figure(figsize=(10, 6))
 #
 #
