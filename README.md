@@ -26,5 +26,12 @@ The Python files' functionalities:
 **Trans_Process.py**: Process the scraped trans-related files and reformat them into the Exomol data structure.   
 **Trans_Remove.py**: Remove the transition lines that either do not have an A coefficient/wavenumber or do not map to any existing states.  
 
-
-
+# How to scrape the data
+The Kurucz atomic database's website is: http://kurucz.harvard.edu/atoms.html  
+To access each atom-related file, find xxyy at the bottom of the webpage, where xx means the element number and yy means neutral when yy = 00 or singly charged when
+yy = 01.  
+Use GrabKuruczAtomic.py to scrape the file by giving the website link.  
+Remember to remove the redundant header and match table after scraping the .gam and lifetime files.   
+Use States_Process.py, Trans_Process.py and PF_Process.py to process each scraped file into Exomol format. (Remember to change atom's name. Match table is needed in State processing.)  
+For some atoms, use States_Merge.py and Trans_Merge.py to combine them.  
+Finally, remove invalid transition lines with Trans_Remove.py  
